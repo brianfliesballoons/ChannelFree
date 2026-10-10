@@ -12,7 +12,7 @@
 
 1. In Jellyfin, open **Dashboard → Plugins → Repositories** (on older layouts, **Plugins → Catalog → ⚙**) and add:
    - **Name:** `Channel Free`
-   - **URL:** `https://raw.githubusercontent.com/scooperman912-prog/jellyfin-plugin-channel-free/main/manifest.json`
+   - **URL:** `https://raw.githubusercontent.com/scooperman912-prog/ChannelFree/main/manifest.json`
 2. Go to **Catalog**, find **Channel Free** under *Live TV*, and install it.
 3. Restart Jellyfin.
 
@@ -72,8 +72,8 @@ Channels are encoded on the fly to H.264, 720p by default, using **VA-API** (Int
 ## Build from source
 
 ```bash
-git clone https://github.com/scooperman912-prog/jellyfin-plugin-channel-free
-cd jellyfin-plugin-channel-free
+git clone https://github.com/scooperman912-prog/ChannelFree
+cd ChannelFree
 JELLYFIN_PLUGINS=/path/to/jellyfin/config/plugins JELLYFIN_CONTAINER=jellyfin bash scripts/build-and-install.sh
 ```
 
