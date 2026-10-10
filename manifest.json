@@ -1,0 +1,12 @@
+[
+  {
+    "guid": "5490ddb4-bf71-48ab-a53c-09045405062e",
+    "name": "Channel Free",
+    "description": "Live-TV channels built from your own library. Shuffled shows, movie marathons and a real TV guide — no extra containers, nothing streams unless someone's watching.",
+    "overview": "Your library, on the air. Own your channels.",
+    "owner": "scooperman912-prog",
+    "category": "Live TV",
+    "imageUrl": "https://raw.githubusercontent.com/scooperman912-prog/jellyfin-plugin-channel-free/main/logo.png",
+    "versions": []
+  }
+]

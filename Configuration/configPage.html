@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Channel Free</title>
+</head>
+<body>
+    <div id="QuasiTvConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox">
+        <style>
+            #QuasiTvConfigPage { --cf-blue:#00a4dc; --cf-blue-l:#4cc3ee; --cf-amber:#ffc861; --cf-card:rgba(255,255,255,.045); --cf-card2:rgba(255,255,255,.08); --cf-line:rgba(255,255,255,.1); --cf-dim:rgba(255,255,255,.62); }
+            #QuasiTvConfigPage .cf-wrap { max-width:1200px; margin:0 auto; padding-bottom:48px; }
+            #QuasiTvConfigPage .cf-acc { font-family:"Barlow Semi Condensed","Roboto Condensed","Arial Narrow","DejaVu Sans Condensed",sans-serif; font-weight:700; letter-spacing:1px; }
+            #QuasiTvConfigPage button { font:inherit; cursor:pointer; }
+            #QuasiTvConfigPage a.cf-link, #QuasiTvConfigPage .cf-link { color:var(--cf-blue-l); background:none; border:0; padding:0; text-decoration:none; }
+            #QuasiTvConfigPage .cf-link:hover { text-decoration:underline; }
+
+            /* top bar */
+            #QuasiTvConfigPage .cf-top { display:flex; align-items:center; gap:14px; flex-wrap:wrap; padding:14px 0; border-bottom:1px solid var(--cf-line); margin-bottom:18px; }
+            #QuasiTvConfigPage .cf-mark { display:flex; align-items:center; gap:8px; font-weight:800; letter-spacing:.5px; font-size:1.15em; }
+            #QuasiTvConfigPage .cf-mark b { background:linear-gradient(90deg,#aa5cc3,#00a4dc); -webkit-background-clip:text; background-clip:text; color:transparent; }
+            #QuasiTvConfigPage .cf-tag { font-size:.85em; color:var(--cf-dim); }
+            #QuasiTvConfigPage .cf-grow { flex-grow:1; }
+            #QuasiTvConfigPage .cf-pill { display:flex; align-items:center; gap:7px; font-size:.85em; font-weight:600; padding:5px 12px; border-radius:999px; background:var(--cf-card); }
+            #QuasiTvConfigPage .cf-dot { width:9px; height:9px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#c9ffd9,#2fbf62 60%); box-shadow:0 0 6px #2fbf62; }
+            #QuasiTvConfigPage .cf-pill.ok { color:#8fe0ae; }
+            #QuasiTvConfigPage .cf-pill.busy { color:#8ad8f5; }
+            #QuasiTvConfigPage .cf-pill.busy .cf-dot { background:radial-gradient(circle at 35% 30%,#d6f4ff,#00a4dc 60%); box-shadow:0 0 6px #00a4dc; animation:cfpulse 1s infinite alternate; }
+            #QuasiTvConfigPage .cf-pill.wait { color:#ffd391; }
+            #QuasiTvConfigPage .cf-pill.wait .cf-dot { background:radial-gradient(circle at 35% 30%,#fff0cf,#e5a00d 60%); box-shadow:0 0 6px #e5a00d; }
+            #QuasiTvConfigPage .cf-pill.bad { color:#ff9a8f; }
+            #QuasiTvConfigPage .cf-pill.bad .cf-dot { background:radial-gradient(circle at 35% 30%,#ffd6d0,#d0402e 60%); box-shadow:0 0 6px #d0402e; }
+            @keyframes cfpulse { from { opacity:.45; } to { opacity:1; } }
+            #QuasiTvConfigPage .cf-clock { font-size:1.15em; color:#fff; background:linear-gradient(#2a3b55,#142033); padding:3px 12px; border-radius:6px; border:1px solid #3a5070; box-shadow:inset 0 1px 0 rgba(255,255,255,.18); white-space:nowrap; }
+
+            /* guide status strip */
+            #QuasiTvConfigPage .q-status { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; margin:0 0 18px; background:var(--cf-card); border-left:4px solid rgba(255,255,255,.2); }
+            #QuasiTvConfigPage .q-status.running { border-left-color:var(--cf-blue); }
+            #QuasiTvConfigPage .q-status.waiting { border-left-color:#e5a00d; }
+            #QuasiTvConfigPage .q-status.done { border-left-color:#2ecc71; }
+            #QuasiTvConfigPage .q-status.failed { border-left-color:#c0392b; }
+            #QuasiTvConfigPage .q-status .q-msg { flex:1; }
+            #QuasiTvConfigPage .q-meter { height:8px; border-radius:4px; background:rgba(255,255,255,.12); overflow:hidden; margin-top:8px; }
+            #QuasiTvConfigPage .q-meter i { display:block; height:100%; width:0; background:linear-gradient(90deg,#aa5cc3,#00a4dc); transition:width .6s; }
+            #QuasiTvConfigPage .q-meter.indet i { width:35%; animation:qslide 1.2s infinite ease-in-out; }
+            @keyframes qslide { 0% { margin-left:-35%; } 100% { margin-left:100%; } }
+
+            /* buttons + inputs */
+            #QuasiTvConfigPage .cf-btn { border:0; border-radius:10px; padding:9px 16px; background:var(--cf-card2); color:inherit; }
+            #QuasiTvConfigPage .cf-btn:hover { background:rgba(255,255,255,.14); }
+            #QuasiTvConfigPage .cf-btn:disabled { opacity:.5; cursor:default; }
+            #QuasiTvConfigPage .cf-btn.primary { background:var(--cf-blue); color:#00141c; font-weight:700; }
+            #QuasiTvConfigPage .cf-btn.primary:hover { background:#28b6e6; }
+            #QuasiTvConfigPage .cf-btn.danger:hover { background:#c0392b; color:#fff; }
+            #QuasiTvConfigPage .cf-in, #QuasiTvConfigPage .cf-sel { background:rgba(0,0,0,.3); color:inherit; border:1px solid rgba(255,255,255,.18); border-radius:8px; padding:8px 10px; font:inherit; }
+            #QuasiTvConfigPage .cf-bar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin:0 0 16px; }
+            #QuasiTvConfigPage .cf-seg { display:inline-flex; background:var(--cf-card); border-radius:10px; padding:4px; }
+            #QuasiTvConfigPage .cf-seg button { border:0; background:transparent; color:var(--cf-dim); padding:7px 14px; border-radius:8px; }
+            #QuasiTvConfigPage .cf-seg button.on { background:rgba(255,255,255,.14); color:#fff; }
+            #QuasiTvConfigPage .cf-seg.off { opacity:.4; pointer-events:none; }
+            #QuasiTvConfigPage .cf-switch { position:relative; display:inline-flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
+            #QuasiTvConfigPage .cf-switch input { position:absolute; opacity:0; width:0; height:0; }
+            #QuasiTvConfigPage .cf-switch i { width:40px; height:22px; border-radius:11px; background:rgba(255,255,255,.18); position:relative; transition:background .2s; flex:none; }
+            #QuasiTvConfigPage .cf-switch i::after { content:""; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:left .2s; }
+            #QuasiTvConfigPage .cf-switch input:checked + i { background:var(--cf-blue); }
+            #QuasiTvConfigPage .cf-switch input:checked + i::after { left:21px; }
+            #QuasiTvConfigPage .cf-switch input:focus-visible + i { outline:2px solid var(--cf-blue-l); outline-offset:2px; }
+            #QuasiTvConfigPage .cf-panel { background:var(--cf-card); border-radius:14px; padding:16px 20px; margin:0 0 16px; }
+            #QuasiTvConfigPage .cf-label { color:var(--cf-amber); font-size:.95em; }
+            #QuasiTvConfigPage .cf-hint { color:var(--cf-dim); font-size:.9em; margin:4px 0 12px; }
+
+            /* channel number badge (glossy cable-box button) */
+            #QuasiTvConfigPage .cf-num { display:inline-flex; align-items:center; justify-content:center; min-width:52px; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.5); border-radius:9px; padding:3px 10px; font-size:1.25em;
+                background:linear-gradient(#3a5a8c 0%,#1d3460 50%,#142847 51%,#1b3a66 100%); border:1px solid #4a6ea8; box-shadow:inset 0 1px 0 rgba(255,255,255,.3); }
+            #QuasiTvConfigPage .cf-num.big { font-size:2.6em; padding:2px 14px; border-radius:12px; min-width:0; box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 4px 14px rgba(0,0,0,.4); }
+            #QuasiTvConfigPage .cf-num.big input { width:3.2ch; background:transparent; border:0; color:inherit; font:inherit; text-align:center; text-shadow:inherit; padding:0; -moz-appearance:textfield; }
+            #QuasiTvConfigPage .cf-num.big input::-webkit-outer-spin-button, #QuasiTvConfigPage .cf-num.big input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+
+            /* channel list */
+            #QuasiTvConfigPage .cf-group { margin:0 0 18px; }
+            #QuasiTvConfigPage .cf-group > summary { cursor:pointer; list-style:none; display:flex; align-items:baseline; gap:10px; padding:6px 0 10px; }
+            #QuasiTvConfigPage .cf-group > summary::-webkit-details-marker { display:none; }
+            #QuasiTvConfigPage .cf-group > summary::before { content:"▸"; color:var(--cf-dim); transition:transform .15s; display:inline-block; }
+            #QuasiTvConfigPage .cf-group[open] > summary::before { transform:rotate(90deg); }
+            #QuasiTvConfigPage .cf-row { display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:12px; background:var(--cf-card); margin-bottom:6px; cursor:pointer; }
+            #QuasiTvConfigPage .cf-row:hover { background:var(--cf-card2); }
+            #QuasiTvConfigPage .cf-row.off .cf-num, #QuasiTvConfigPage .cf-row.off .cf-main { opacity:.5; }
+            #QuasiTvConfigPage .cf-main { flex:1; min-width:0; }
+            #QuasiTvConfigPage .cf-name { font-weight:600; }
+            #QuasiTvConfigPage .cf-sub { color:var(--cf-dim); font-size:.88em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+            #QuasiTvConfigPage .cf-now { color:var(--cf-blue-l); }
+            #QuasiTvConfigPage .cf-chev { color:var(--cf-dim); font-size:1.3em; }
+
+            /* detail head + tabs */
+            #QuasiTvConfigPage .cf-head { display:flex; align-items:center; gap:18px; flex-wrap:wrap; margin:14px 0 18px; }
+            #QuasiTvConfigPage .cf-title { font-size:2em; font-weight:700; background:transparent; border:1px solid transparent; border-radius:8px; color:inherit; padding:2px 6px; margin-left:-7px; width:100%; max-width:560px; }
+            #QuasiTvConfigPage .cf-title:hover, #QuasiTvConfigPage .cf-title:focus { border-color:rgba(255,255,255,.2); background:rgba(0,0,0,.25); outline:0; }
+            #QuasiTvConfigPage .cf-onair { background:var(--cf-card); padding:10px 16px; border-radius:999px; font-weight:600; }
+            #QuasiTvConfigPage .cf-tabs { display:flex; gap:4px; border-bottom:1px solid var(--cf-line); margin-bottom:18px; overflow-x:auto; }
+            #QuasiTvConfigPage .cf-tabs button { border:0; background:none; color:var(--cf-dim); padding:12px 18px; border-bottom:3px solid transparent; white-space:nowrap; }
+            #QuasiTvConfigPage .cf-tabs button.on { color:#fff; font-weight:600; border-bottom-color:var(--cf-blue); }
+
+            /* tonight's mix */
+            #QuasiTvConfigPage .cf-mixbar { display:flex; height:32px; border-radius:8px; overflow:hidden; gap:2px; margin-top:10px; }
+            #QuasiTvConfigPage .cf-mixbar div { min-width:0; display:flex; align-items:center; padding:0 9px; color:#0b0b0b; font-size:.78em; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+                background-image:linear-gradient(rgba(255,255,255,.3),rgba(255,255,255,0) 55%); }
+
+            /* title cards */
+            #QuasiTvConfigPage .q-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:14px; margin:10px 0 24px; }
+            #QuasiTvConfigPage .q-card { position:relative; background:var(--cf-card); border-radius:14px; padding:9px; display:flex; flex-direction:column; gap:8px; }
+            #QuasiTvConfigPage .q-poster { position:relative; aspect-ratio:2/3; border-radius:10px; background:#222 center/cover no-repeat; }
+            #QuasiTvConfigPage .q-rankb { position:absolute; top:7px; left:7px; background:linear-gradient(#ffd27a,#f0a12a); color:#2a1800; font-size:1em; line-height:1; padding:4px 8px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.45); }
+            #QuasiTvConfigPage .q-tline { display:flex; align-items:center; gap:7px; }
+            #QuasiTvConfigPage .q-sw { width:10px; height:10px; border-radius:3px; flex:none; }
+            #QuasiTvConfigPage .q-title { font-weight:600; font-size:.92em; line-height:1.25; }
+            #QuasiTvConfigPage .q-sub { color:var(--cf-dim); font-size:.8em; }
+            #QuasiTvConfigPage .q-badge { font-size:.72em; padding:2px 7px; border-radius:8px; align-self:flex-start; }
+            #QuasiTvConfigPage .q-badge.auto { background:rgba(0,164,220,.22); }
+            #QuasiTvConfigPage .q-badge.added { background:rgba(46,204,113,.28); }
+            #QuasiTvConfigPage .q-badge.removed { background:rgba(192,57,43,.35); }
+            #QuasiTvConfigPage .q-acts { display:flex; gap:6px; margin-top:auto; }
+            #QuasiTvConfigPage .q-acts button { flex:1; border:0; background:rgba(255,255,255,.1); color:#ddd; border-radius:8px; padding:6px 0; }
+            #QuasiTvConfigPage .q-acts button:hover { background:var(--cf-blue); color:#fff; }
+            #QuasiTvConfigPage .q-acts button:disabled { opacity:.3; pointer-events:none; }
+            #QuasiTvConfigPage .q-card[draggable="true"] { cursor:grab; }
+            #QuasiTvConfigPage .q-card.dragging { opacity:.4; }
+            #QuasiTvConfigPage .q-card.drop-before { box-shadow:-4px 0 0 var(--cf-blue); }
+            #QuasiTvConfigPage .q-menu { display:none; position:absolute; z-index:5; right:6px; bottom:46px; width:200px; background:#202020; border:1px solid #333; border-radius:12px; padding:10px; box-shadow:0 10px 30px rgba(0,0,0,.6); flex-direction:column; gap:8px; }
+            #QuasiTvConfigPage .q-card.menu-open .q-menu { display:flex; }
+            #QuasiTvConfigPage .q-menu label { display:flex; flex-direction:column; gap:4px; font-size:.82em; color:var(--cf-dim); }
+            #QuasiTvConfigPage .q-menu .cf-sel { padding:6px; font-size:.95em; color:#fff; }
+
+            /* rules */
+            #QuasiTvConfigPage .cf-rule { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+            #QuasiTvConfigPage .q-chip { display:inline-flex; align-items:center; gap:6px; padding:5px 6px 5px 12px; border-radius:999px; margin:0 6px 6px 0; font-size:.9em; font-weight:600; }
+            #QuasiTvConfigPage .q-chip.inc { background:#1e2a30; color:var(--cf-blue-l); }
+            #QuasiTvConfigPage .q-chip.exc { background:#33201e; color:#ff9a8f; }
+            #QuasiTvConfigPage .q-chip button { border:0; background:rgba(0,0,0,.3); color:inherit; border-radius:50%; width:20px; height:20px; line-height:1; padding:0; }
+
+            #QuasiTvConfigPage .cf-search { width:100%; box-sizing:border-box; font-size:1.05em; padding:11px 14px; border-radius:10px; }
+            #QuasiTvConfigPage .cf-search:focus { outline:0; border-color:var(--cf-blue); box-shadow:0 0 0 2px rgba(0,164,220,.35); }
+            #QuasiTvConfigPage .cf-rules { display:flex; flex-direction:column; gap:6px; margin-top:10px; max-height:420px; overflow-y:auto; }
+            #QuasiTvConfigPage .cf-rrow { display:flex; align-items:center; gap:12px; padding:9px 12px; border-radius:10px; background:rgba(255,255,255,.04); }
+            #QuasiTvConfigPage .cf-rrow .cf-main b { font-weight:600; }
+            #QuasiTvConfigPage .cf-rrow .cf-btn { padding:6px 12px; }
+            #QuasiTvConfigPage .cf-rrow.inc { box-shadow:inset 3px 0 0 var(--cf-blue); }
+            #QuasiTvConfigPage .cf-rrow.exc { box-shadow:inset 3px 0 0 #d0402e; }
+            /* settings */
+            #QuasiTvConfigPage .cf-settings > summary { cursor:pointer; font-weight:600; padding:10px 0; }
+            #QuasiTvConfigPage .cf-settings h3 { margin:1.4em 0 .4em; }
+            #QuasiTvConfigPage pre.cf-url { white-space:pre-wrap; word-break:break-all; background:rgba(0,0,0,.35); padding:10px 12px; border-radius:8px; }
+        </style>
+        <div data-role="content">
+            <div class="content-primary cf-wrap">
+
+                <!-- ============ TOP BAR ============ -->
+                <div class="cf-top">
+                    <div class="cf-mark">
+                        <svg viewBox="0 0 100 140" width="22" height="31" aria-hidden="true">
+                            <defs><linearGradient id="cfLogoG" gradientUnits="userSpaceOnUse" x1="8" y1="18" x2="92" y2="126"><stop offset="0" stop-color="#aa5cc3"/><stop offset="1" stop-color="#00a4dc"/></linearGradient></defs>
+                            <path d="M34 28 H66 Q80 28 83 40 L93 94 Q95 108 80 108 H20 Q5 108 7 94 L17 40 Q20 28 34 28 Z" fill="none" stroke="url(#cfLogoG)" stroke-width="9" stroke-linejoin="round"/>
+                            <path d="M30 108 L24 122 M70 108 L76 122" stroke="url(#cfLogoG)" stroke-width="7" stroke-linecap="round"/>
+                            <path d="M39 48 V88 M39 48 H63 M39 67 H57" fill="none" stroke="url(#cfLogoG)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>CHANNEL<b>FREE</b></span>
+                    </div>
+                    <span class="cf-tag">No contract. No hidden fees. No retention department.</span>
+                    <span class="cf-grow"></span>
+                    <span id="CfPill" class="cf-pill ok"><span class="cf-dot"></span><span id="CfPillText">Guide up to date</span></span>
+                    <span id="CfClock" class="cf-clock cf-acc"></span>
+                </div>
+
+                <div id="QuasiGuideStatus" class="q-status" style="display:none;">
+                    <div class="q-msg"><div id="QuasiGuideMsg"></div><div id="QuasiGuideMeter" class="q-meter" style="display:none;"><i></i></div></div>
+                    <button class="cf-btn" id="QuasiGuideNow" type="button" style="display:none;">Update guide now</button>
+                </div>
+
+                <!-- ============ CHANNEL LIST ============ -->
+                <div id="QuasiListView">
+                    <div class="cf-bar">
+                        <h2 style="margin:0;" class="cf-grow">Your package</h2>
+                        <input id="QuasiNewName" class="cf-in" type="text" placeholder="New channel name" />
+                        <button class="cf-btn primary" id="QuasiCreate" type="button">+ New channel</button>
+                        <button class="cf-btn" id="QuasiRebuildAll" type="button" title="Re-plan every channel after what's on now (picks up bumpers, credit markers, settings)">↻ Rebuild all</button>
+                    </div>
+                    <p class="cf-hint">Your package is every channel you get. Flip one on to put it in the TV guide. Genre (201+) and network (301+) channels are built from your library and start off.</p>
+                    <div id="QuasiChannelList">Loading…</div>
+
+                    <!-- ============ SETTINGS ============ -->
+                    <details class="cf-settings cf-panel">
+                        <summary>Setup &amp; settings</summary>
+                        <h3>Hook it up to Live TV</h3>
+                        <p>Dashboard → Live TV → <b>Tuner Devices</b> → + → M3U Tuner → paste:</p>
+                        <pre id="QuasiM3u" class="cf-url"></pre>
+                        <p>Dashboard → Live TV → <b>TV Guide Data Providers</b> → + → XMLTV → paste:</p>
+                        <pre id="QuasiXml" class="cf-url"></pre>
+                        <p><b>Remote tricks:</b> in the guide, press <b>Record</b> on what's on now to restart it, or on a later program to jump to it.
+                            Back out within the revert window (and stay away 20 s+) and the channel goes back to what was on before.</p>
+                        <p><b>Tags:</b> <code>cable:&lt;channel key&gt;</code> adds a title, <code>cable:exclude</code> keeps it off every channel (old <code>quasi:</code> tags still work).</p>
+
+                        <form id="QuasiTvConfigForm">
+                            <h3>Playback</h3>
+                            <div class="inputContainer"><input is="emby-input" type="text" id="InternalUrl" label="Internal Jellyfin URL (how Jellyfin reaches itself)" /></div>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="RevertWindowMinutes" min="0" max="240" label="Revert window after a jump (minutes)" /></div>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="VideoBitrateKbps" min="500" max="20000" label="Channel video bitrate (kbps)" /></div>
+                            <div class="inputContainer"><input is="emby-input" type="text" id="PreferredAudioLanguages" label="Preferred audio languages (e.g. eng,en — used when a file has several audio tracks)" /></div>
+
+                            <h3>Info banner</h3>
+                            <div class="checkboxContainer"><label><input is="emby-checkbox" type="checkbox" id="ShowBanner" /><span>Show the info banner (channel, title, progress) when tuning in</span></label></div>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="BannerSeconds" min="1" max="30" label="Banner length (seconds)" /></div>
+                            <div class="inputContainer"><input is="emby-input" type="text" id="TimeZoneId" label="Time zone for the banner (e.g. America/New_York — leave empty to use the server's)" /></div>
+
+                            <h3>Credits</h3>
+                            <div class="checkboxContainer"><label><input is="emby-checkbox" type="checkbox" id="TrimCredits" /><span>Cut end credits short when a credits marker exists (Intro Skipper, or a "Credits" chapter)</span></label></div>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="CreditsKeepSecondsTv" min="0" max="600" label="TV: seconds of credits to keep" /></div>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="CreditsKeepSecondsMovie" min="0" max="600" label="Movies: seconds of credits to keep" /></div>
+                            <p class="cf-hint">Per show / movie: open a channel and use <b>⋯ → End credits → Leave alone</b> on its card. The tag <code>cable:keep-credits</code> does the same.</p>
+
+                            <h3>Bumpers</h3>
+                            <div class="checkboxContainer"><label><input is="emby-checkbox" type="checkbox" id="ShowBumpers" /><span>"Up Next" bumper before a new show or movie</span></label></div>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="BumperSeconds" min="2" max="15" label="Bumper length (seconds)" /></div>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="BumperVolumeDb" min="-40" max="6" label="Stinger volume (dB, negative = quieter)" /></div>
+                            <p class="cf-hint">Your own stingers: put audio files in <code>config/plugins/configurations/CablePackage/bumper-sounds/</code> — one is picked at random.</p>
+
+                            <h3>Web &amp; LG</h3>
+                            <div class="checkboxContainer"><label><input is="emby-checkbox" type="checkbox" id="DownArrowBanner" /><span>First Down press on a channel shows a mini info banner; press again for the normal controls</span></label></div>
+
+                            <h3>Auto-built channels</h3>
+                            <p class="cf-hint">On a fresh install, Channel Free turns on the 10 channels your library can fill best and numbers them 101+. Want it to pick again?
+                                This switches built-in, genre and network channels on/off and renumbers them — your own channels and title picks stay.</p>
+                            <p><button class="cf-btn" id="CfRepick" type="button">↻ Re-pick my lineup from the library</button></p>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="MinGenreTitles" min="1" label="Genre channels: minimum movies in a genre" /></div>
+                            <div class="inputContainer"><input is="emby-input" type="number" id="MinNetworkShows" min="1" label="Network channels: minimum shows from a network" /></div>
+
+                            <button is="emby-button" type="submit" class="raised button-submit block emby-button"><span>Save settings</span></button>
+                        </form>
+                    </details>
+                </div>
+
+                <!-- ============ CHANNEL DETAIL ============ -->
+                <div id="QuasiDetailView" style="display:none;">
+                    <button class="cf-link" id="QuasiBack" type="button">‹ Your package</button>
+
+                    <div class="cf-head">
+                        <span class="cf-num big cf-acc" title="Channel number — click to change"><input id="QuasiDetailNumber" type="number" min="1" aria-label="Channel number" /></span>
+                        <div class="cf-main">
+                            <input id="QuasiDetailName" class="cf-title" type="text" aria-label="Channel name" title="Click to rename" />
+                            <div class="cf-sub" id="CfDetailSub"></div>
+                        </div>
+                        <label class="cf-switch cf-onair"><input id="QuasiDetailEnabled" type="checkbox" /><i></i>On air</label>
+                    </div>
+
+                    <div class="cf-bar">
+                        <div class="cf-seg" id="CfOrder" role="group" aria-label="Play order">
+                            <button type="button" data-val="shuffle">Shuffle</button>
+                            <button type="button" data-val="inorder" title="Release order, loops when it reaches the end">In order</button>
+                        </div>
+                        <div class="cf-seg" id="CfMix" role="group" aria-label="Mix">
+                            <button type="button" data-val="even" title="Every title gets an equal shot">Even mix</button>
+                            <button type="button" data-val="fav" title="Rank titles left to right; higher ones air more often">Weighted mix</button>
+                        </div>
+                        <label title="When a show comes up, play this many episodes back-to-back (two-parters always stay together)">Episodes in a row
+                            <select id="QuasiDetailInARow" class="cf-sel">
+                                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                            </select>
+                        </label>
+                        <span class="cf-grow"></span>
+                        <button class="cf-btn" id="QuasiDetailRebuild" type="button" title="Re-plan everything after what's on now — picks up new titles right away">↻ Rebuild schedule</button>
+                        <button class="cf-btn primary" id="CfAddToggle" type="button">+ Add to channel</button>
+                    </div>
+
+                    <!-- one search: titles, genres, networks, tags -->
+                    <div id="CfAddPanel" class="cf-panel" style="display:none;">
+                        <div class="cf-bar" style="margin-bottom:12px;">
+                            <div class="cf-seg" id="CfFind" role="tablist" aria-label="Search for">
+                                <button type="button" data-val="titles" class="on">Titles</button>
+                                <button type="button" data-val="genre">Genres</button>
+                                <button type="button" data-val="studio">Networks &amp; studios</button>
+                                <button type="button" data-val="tag">Keyword tags</button>
+                            </div>
+                            <select id="QuasiGenreScope" class="cf-sel" style="display:none;" title="Which titles the rule applies to">
+                                <option value="all">Movies &amp; shows</option>
+                                <option value="movies">Movies only</option>
+                                <option value="shows">Shows only</option>
+                            </select>
+                            <span class="cf-grow"></span>
+                            <button class="cf-btn" id="CfAddClose" type="button">Done</button>
+                        </div>
+                        <input id="QuasiSearch" class="cf-in cf-search" type="search" autocomplete="off" />
+                        <p class="cf-hint" id="CfFindHint" style="margin:8px 0 0;"></p>
+                        <div id="QuasiSearchResults" class="q-grid" style="margin-bottom:0;"></div>
+                        <div id="CfRuleResults" class="cf-rules"></div>
+                    </div>
+
+                    <div class="cf-panel cf-rule" id="CfRulePanel">
+                        <span class="cf-label cf-acc">AUTO-ADD ▸</span>
+                        <span id="CfRuleLine"></span>
+                    </div>
+
+                    <div class="cf-panel" id="CfMixPanel">
+                        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline;">
+                            <span><span class="cf-label cf-acc">TONIGHT’S MIX</span> &nbsp;<span class="cf-hint" id="CfMixCaption"></span></span>
+                            <span class="cf-hint" id="CfMixHelp">Drag cards or use ‹ › to rerank</span>
+                        </div>
+                        <div class="cf-mixbar" id="CfMixBar"></div>
+                    </div>
+
+                    <div class="cf-hint" id="QuasiItemsHeader"></div>
+                    <div id="QuasiItems" class="q-grid"></div>
+
+                    <div id="QuasiCollectionsWrap" style="display:none;">
+                        <h3>Collections on this channel</h3>
+                        <p class="cf-hint">Everything in these collections airs here — including titles added to them later.</p>
+                        <div id="QuasiCollections" class="q-grid"></div>
+                    </div>
+
+                    <div id="QuasiRemovedWrap" style="display:none;">
+                        <h3>Taken off this channel</h3>
+                        <div id="QuasiRemoved" class="q-grid"></div>
+                    </div>
+
+                    <div id="CfDeletePanel" style="display:none; margin-top:24px;">
+                        <button class="cf-btn danger" id="QuasiDetailDelete" type="button">Cancel this channel</button>
+                        <span class="cf-hint">&nbsp;Deletes the channel from your package. Your library isn't touched.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            (function () {
+                var pluginId = '5490ddb4-bf71-48ab-a53c-09045405062e';
+                var page = document.querySelector('#QuasiTvConfigPage');
+                var current = null; // key of the channel being edited
+                var searchTimer = null;
+                var listCache = [];
+                var PALETTE = ['#00a4dc', '#8f7cf0', '#e07bb8', '#ffb347', '#5fd38a', '#3fc7c0', '#c3a6ff', '#f2d16b', '#6fb3ff', '#ff8c7a', '#9be37a', '#7fd6ee'];
+                var MIX_SEGMENTS = 12;
+
+                function $(sel) { return page.querySelector(sel); }
+                function $$(sel) { return Array.prototype.slice.call(page.querySelectorAll(sel)); }
+                function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+                function api(path) { return ApiClient.getUrl('QuasiTV/admin/' + path); }
+                function getJson(path) { return ApiClient.getJSON(api(path)); }
+                function send(method, path, body) {
+                    if (method !== 'GET' && path !== 'guide-refresh' && typeof guideKick === 'function') { setTimeout(guideKick, 3500); }
+                    return ApiClient.ajax({ type: method, url: api(path), data: body ? JSON.stringify(body) : undefined, contentType: 'application/json', dataType: 'json' });
+                }
+                function img(id) { return ApiClient.getUrl('Items/' + id + '/Images/Primary', { maxHeight: 360 }); }
+                function toast(msg) {
+                    var t = document.createElement('div');
+                    t.textContent = msg;
+                    t.style.cssText = 'position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#00a4dc;color:#fff;padding:10px 18px;border-radius:10px;z-index:9999;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+                    document.body.appendChild(t);
+                    setTimeout(function () { t.remove(); }, 2200);
+                }
+                function minsLeft(iso) {
+                    if (!iso) { return ''; }
+                    var m = Math.round((new Date(iso) - new Date()) / 60000);
+                    return m > 0 ? ' · ' + m + ' min left' : '';
+                }
+                function nowLine(c) { return c && c.now ? '<span class="cf-now">Now playing ▸</span> ' + esc(c.now) + minsLeft(c.nowEndsUtc) : ''; }
+
+                // ---------------- clock ----------------
+                function tick() { $('#CfClock').textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); }
+                tick();
+                setInterval(tick, 20000);
+
+                // ---------------- list ----------------
+                var GROUPS = [
+                    { title: 'Your channels', kinds: ['Core', 'Custom'], open: true },
+                    { title: 'Genre channels', kinds: ['Genre'] },
+                    { title: 'Network channels', kinds: ['Network'] }
+                ];
+                function row(c) {
+                    var sub = c.count + ' titles' + (c.now && c.enabled ? ' · ' + nowLine(c) : '');
+                    return '<div class="cf-row' + (c.enabled ? '' : ' off') + '" data-key="' + esc(c.key) + '">' +
+                        '<span class="cf-num cf-acc">' + c.number + '</span>' +
+                        '<div class="cf-main"><div class="cf-name">' + esc(c.name) + '</div><div class="cf-sub">' + sub + '</div></div>' +
+                        '<label class="cf-switch" title="On air"><input type="checkbox" data-act="toggle"' + (c.enabled ? ' checked' : '') + ' /><i></i></label>' +
+                        '<span class="cf-chev">›</span></div>';
+                }
+                function loadList() {
+                    $('#QuasiListView').style.display = '';
+                    $('#QuasiDetailView').style.display = 'none';
+                    current = null;
+                    getJson('channels').then(function (list) {
+                        listCache = list;
+                        var html = GROUPS.map(function (g) {
+                            var rows = list.filter(function (c) { return g.kinds.indexOf(c.kind) >= 0; });
+                            if (!rows.length) { return ''; }
+                            var on = rows.filter(function (c) { return c.enabled; }).length;
+                            return '<details class="cf-group"' + (g.open || on ? ' open' : '') + '><summary><h3 style="margin:0;">' + g.title + '</h3>' +
+                                '<span class="cf-hint" style="margin:0;">' + on + ' of ' + rows.length + ' on air</span></summary>' + rows.map(row).join('') + '</details>';
+                        }).join('');
+                        $('#QuasiChannelList').innerHTML = html || '<p>No channels yet.</p>';
+                    });
+                }
+
+                $('#QuasiChannelList').addEventListener('click', function (e) {
+                    var r = e.target.closest('.cf-row');
+                    if (!r || e.target.closest('.cf-switch')) { return; }
+                    loadDetail(r.getAttribute('data-key'));
+                });
+                $('#QuasiChannelList').addEventListener('change', function (e) {
+                    if (e.target.getAttribute('data-act') !== 'toggle') { return; }
+                    var r = e.target.closest('.cf-row'), on = e.target.checked;
+                    send('POST', 'channels/' + r.getAttribute('data-key') + '/settings', { Enabled: on }).then(function () {
+                        r.classList.toggle('off', !on);
+                        toast(on ? 'On the air — guide updates shortly' : 'Off the air');
+                    });
+                });
+
+                $('#QuasiRebuildAll').addEventListener('click', function () {
+                    var btn = this;
+                    btn.disabled = true;
+                    send('POST', 'rebuild-all').then(function (r) {
+                        btn.disabled = false;
+                        toast('Rebuilt ' + ((r && r.channels) || 0) + ' channels — guide updates shortly');
+                    }, function () { btn.disabled = false; toast('Something went wrong'); });
+                });
+
+                function createChannel() {
+                    var name = $('#QuasiNewName').value.trim();
+                    if (!name) { $('#QuasiNewName').focus(); return; }
+                    send('POST', 'channels', { Name: name }).then(function (r) {
+                        $('#QuasiNewName').value = '';
+                        loadDetail(r.key);
+                    });
+                }
+                $('#QuasiCreate').addEventListener('click', createChannel);
+                $('#QuasiNewName').addEventListener('keydown', function (e) { if (e.key === 'Enter') { createChannel(); } });
+
+                $('#CfRepick').addEventListener('click', function () {
+                    var btn = this;
+                    if (btn.getAttribute('data-confirm') !== '1') {
+                        btn.setAttribute('data-confirm', '1');
+                        btn.textContent = 'Click again to re-pick';
+                        setTimeout(function () { btn.removeAttribute('data-confirm'); btn.textContent = '↻ Re-pick my lineup from the library'; }, 4000);
+                        return;
+                    }
+                    btn.disabled = true;
+                    send('POST', 'starter-lineup').then(function (r) {
+                        btn.disabled = false;
+                        btn.removeAttribute('data-confirm');
+                        btn.textContent = '↻ Re-pick my lineup from the library';
+                        toast(r && r.ok === false ? 'Library still looks empty — try after a scan' : 'New lineup picked — guide updates shortly');
+                        loadList();
+                    }, function () { btn.disabled = false; toast('Something went wrong'); });
+                });
+
+                // ---------------- detail ----------------
+                var showBlocks = {}, keepCredits = {};
+                var weighted = false, inOrder = false, ranking = [], lastDetail = null, rankTimer = null;
+
+                function pctFor(i, n) {
+                    var total = 0;
+                    for (var k = 1; k <= n; k++) { total += 1 / Math.pow(k, 0.72); }
+                    return 100 / Math.pow(i + 1, 0.72) / total;
+                }
+                function ranked() { return weighted && !inOrder; }
+                function colorFor(id) {
+                    var i = ranking.indexOf(id);
+                    return ranked() && i >= 0 && i < MIX_SEGMENTS ? PALETTE[i % PALETTE.length] : null;
+                }
+
+                function menu(it) {
+                    var parts = [];
+                    if (it.type === 'Show') {
+                        var v = showBlocks[it.id] || 0;
+                        var opts = '<option value="0"' + (v === 0 ? ' selected' : '') + '>Channel default</option>';
+                        for (var n = 1; n <= 6; n++) { opts += '<option value="' + n + '"' + (v === n ? ' selected' : '') + '>' + n + '</option>'; }
+                        parts.push('<label>Episodes in a row<select class="cf-sel q-block">' + opts + '</select></label>');
+                    }
+                    if (it.type === 'Show' || it.type === 'Movie') {
+                        var keep = !!keepCredits[it.id];
+                        parts.push('<label>End credits<select class="cf-sel q-credits">' +
+                            '<option value="auto"' + (keep ? '' : ' selected') + '>Trim when marked</option>' +
+                            '<option value="keep"' + (keep ? ' selected' : '') + '>Leave alone</option></select></label>');
+                    }
+                    parts.push('<button class="cf-btn danger" type="button" data-act="remove">Take off this channel</button>');
+                    return '<div class="q-menu">' + parts.join('') + '</div>';
+                }
+
+                // mode: 'lineup' | 'collection' | 'removed' | 'search'
+                function card(it, mode, badgeClass) {
+                    var sub = [it.type, it.year].filter(Boolean).join(' · ');
+                    var i = ranking.indexOf(it.id);
+                    var isRanked = mode === 'lineup' && ranked() && i >= 0;
+                    var color = mode === 'lineup' ? colorFor(it.id) : null;
+                    var acts;
+                    if (mode === 'lineup') {
+                        acts = (isRanked
+                            ? '<button type="button" data-move="-1" title="More airtime"' + (i === 0 ? ' disabled' : '') + '>‹</button>' +
+                              '<button type="button" data-move="1" title="Less airtime"' + (i === ranking.length - 1 ? ' disabled' : '') + '>›</button>'
+                            : '') +
+                            '<button type="button" data-menu="1" title="Options" aria-label="Options">⋯</button>';
+                    } else if (mode === 'collection') {
+                        acts = '<button type="button" data-act="remove">Remove collection</button>';
+                    } else if (mode === 'removed') {
+                        acts = '<button type="button" data-act="restore">Put back</button>';
+                    } else {
+                        acts = it.onChannel ? '<button type="button" disabled>On this channel</button>' : '<button type="button" data-act="add">+ Add</button>';
+                    }
+                    var badge = it.reason && !(mode === 'lineup' && it.reason === 'Added by you') ? '<span class="q-badge ' + badgeClass + '">' + esc(it.reason) + '</span>' : '';
+                    return '<div class="q-card" data-id="' + esc(it.id) + '"' + (isRanked ? ' draggable="true"' : '') + '>' +
+                        '<div class="q-poster" style="background-image:url(\'' + img(it.id) + '\')">' +
+                        (isRanked ? '<span class="q-rankb cf-acc">#' + (i + 1) + '</span>' : '') + '</div>' +
+                        '<div class="q-tline">' + (color ? '<span class="q-sw" style="background:' + color + '"></span>' : '') + '<span class="q-title">' + esc(it.name) + '</span></div>' +
+                        '<div class="q-sub">' + esc(sub) + '</div>' + badge +
+                        '<div class="q-acts">' + acts + '</div>' +
+                        (mode === 'lineup' ? menu(it) : '') + '</div>';
+                }
+
+                function setSeg(id, val) { $$(id + ' button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-val') === val); }); }
+
+                function detailSub(d) {
+                    var c = listCache.filter(function (x) { return x.key === d.key; })[0];
+                    var n = d.items.length;
+                    var parts = [n + (n === 1 ? ' title' : ' titles')];
+                    if (d.enabled && c && c.now) { parts.push(nowLine(c)); }
+                    $('#CfDetailSub').innerHTML = parts.join(' · ');
+                }
+
+                // AUTO-ADD line: plain sentence with removable rule chips
+                var KIND_WORD = { genre: '', studio: 'from ', tag: 'tagged ' };
+                function ruleChip(cls, kind, name, scope) {
+                    var sc = { movies: ' (movies)', shows: ' (shows)' }[scope] || '';
+                    var label = KIND_WORD[kind] + (kind === 'tag' ? '“' + esc(name) + '”' : esc(name)) + sc;
+                    return '<span class="q-chip ' + cls + '">' + label + ' <button type="button" data-kind="' + kind + '" data-name="' + esc(name) + '" title="Remove rule" aria-label="Remove rule">×</button></span>';
+                }
+                function ruleLine(d) {
+                    var inc = [].concat(
+                        d.includeGenres.map(function (g) { return ruleChip('inc', 'genre', g.genre, g.scope); }),
+                        d.includeStudios.map(function (g) { return ruleChip('inc', 'studio', g.genre, g.scope); }),
+                        d.includeTags.map(function (g) { return ruleChip('inc', 'tag', g.genre, g.scope); }));
+                    var exc = [].concat(
+                        d.excludeGenres.map(function (g) { return ruleChip('exc', 'genre', g); }),
+                        d.excludeStudios.map(function (g) { return ruleChip('exc', 'studio', g); }),
+                        d.excludeTags.map(function (g) { return ruleChip('exc', 'tag', g); }));
+                    var builtIn = d.kind === 'Custom' ? '' : d.kind === 'Genre' ? 'its genre' : d.kind === 'Network' ? 'its network' : 'this channel’s built-in picks';
+                    var text;
+                    if (inc.length) {
+                        text = '<span class="cf-hint" style="margin:0;">New titles join when they’re</span> ' + inc.join(' ') + (builtIn ? ' <span class="cf-hint" style="margin:0;">plus ' + builtIn + '</span>' : '');
+                    } else if (builtIn) {
+                        text = '<span class="cf-hint" style="margin:0;">New titles join using ' + builtIn + '.</span>';
+                    } else {
+                        text = '<span class="cf-hint" style="margin:0;">Nothing joins on its own — only titles you add. Use <b>+ Add to channel</b> → Genres, Networks or Keyword tags to change that.</span>';
+                    }
+                    if (exc.length) { text += ' <span class="cf-hint" style="margin:0;">— except</span> ' + exc.join(' '); }
+                    $('#CfRuleLine').innerHTML = text;
+                }
+                $('#CfRuleLine').addEventListener('click', function (e) {
+                    var b = e.target.closest('button[data-kind]');
+                    if (b) { rule('clear', b.getAttribute('data-name'), b.getAttribute('data-kind')); }
+                });
+
+                function loadDetail(key, keep) {
+                    var fresh = current !== key;
+                    current = key;
+                    $('#QuasiListView').style.display = 'none';
+                    $('#QuasiDetailView').style.display = '';
+                    if (fresh && !keep) { closeFinder(); }
+                    getJson('channels/' + encodeURIComponent(key)).then(function (d) {
+                        lastDetail = d;
+                        $('#QuasiDetailNumber').value = d.number;
+                        $('#QuasiDetailNumber').style.width = (String(d.number).length + 0.6) + 'ch';
+                        $('#QuasiDetailName').value = d.name;
+                        $('#QuasiDetailEnabled').checked = d.enabled;
+                        $('#QuasiDetailInARow').value = String(d.inARow || 1);
+                        inOrder = d.order === 'inorder';
+                        weighted = !!d.weighted;
+                        ranking = (d.ranking || []).slice();
+                        setSeg('#CfOrder', inOrder ? 'inorder' : 'shuffle');
+                        setSeg('#CfMix', weighted ? 'fav' : 'even');
+                        $('#CfMix').classList.toggle('off', inOrder);
+                        $('#CfMix').title = inOrder ? 'In order plays straight through, so there is no mix to set' : '';
+                        showBlocks = d.showBlocks || {};
+                        keepCredits = {};
+                        (d.keepCredits || []).forEach(function (id) { keepCredits[id] = true; });
+                        ruleLine(d);
+                        $('#QuasiCollectionsWrap').style.display = d.collections.length ? '' : 'none';
+                        $('#QuasiCollections').innerHTML = d.collections.map(function (it) { return card(it, 'collection', 'added'); }).join('');
+                        $('#CfDeletePanel').style.display = d.kind === 'Custom' ? '' : 'none';
+                        renderItems();
+                        $('#QuasiRemovedWrap').style.display = d.removed.length ? '' : 'none';
+                        $('#QuasiRemoved').innerHTML = d.removed.map(function (it) { return card(it, 'removed', 'removed'); }).join('');
+                        if ($('#CfAddPanel').style.display !== 'none') { runFind(); }
+                    });
+                }
+
+                function renderMix() {
+                    var d = lastDetail;
+                    var bar = $('#CfMixBar');
+                    if (inOrder) {
+                        $('#CfMixCaption').textContent = 'In order: plays straight through by release date, then loops.';
+                        $('#CfMixHelp').style.display = 'none';
+                        bar.style.display = 'none';
+                        return;
+                    }
+                    if (!ranked()) {
+                        $('#CfMixCaption').textContent = 'Even mix: every title gets an equal shot. Pick Weighted mix to rank them.';
+                        $('#CfMixHelp').style.display = 'none';
+                        bar.style.display = 'none';
+                        return;
+                    }
+                    var names = {};
+                    d.items.forEach(function (it) { names[it.id] = it.name; });
+                    var n = ranking.length, html = '', rest = 0;
+                    for (var i = 0; i < n; i++) {
+                        var p = pctFor(i, n);
+                        if (i < MIX_SEGMENTS) {
+                            html += '<div style="flex:' + p.toFixed(2) + ' 1 0;background-color:' + PALETTE[i % PALETTE.length] + ';" title="' + esc(names[ranking[i]] || '') + ' · about ' + Math.round(p) + '%">' + esc(names[ranking[i]] || '') + '</div>';
+                        } else { rest += p; }
+                    }
+                    if (rest > 0) { html += '<div style="flex:' + rest.toFixed(2) + ' 1 0;background-color:#555;color:#eee;" title="' + (n - MIX_SEGMENTS) + ' more · about ' + Math.round(rest) + '%">+' + (n - MIX_SEGMENTS) + ' more</div>'; }
+                    $('#CfMixCaption').textContent = 'How often each title airs';
+                    $('#CfMixHelp').style.display = '';
+                    bar.style.display = '';
+                    bar.innerHTML = html;
+                }
+
+                function renderItems() {
+                    var d = lastDetail;
+                    if (!d) { return; }
+                    var items = d.items.slice();
+                    if (ranked()) { items.sort(function (a, b) { return ranking.indexOf(a.id) - ranking.indexOf(b.id); }); }
+                    $('#QuasiItemsHeader').textContent = items.length ? 'On this channel (' + items.length + ')' : '';
+                    $('#QuasiItems').innerHTML = items.map(function (it) {
+                        var mine = it.reason === 'Added by you' || it.reason.indexOf('From ') === 0 || it.reason.indexOf('Genre: ') === 0 || it.reason.indexOf('Tag: ') === 0 || it.reason.indexOf('Studio: ') === 0;
+                        return card(it, 'lineup', mine ? 'added' : 'auto');
+                    }).join('') || '<p class="cf-hint">Nothing on this channel yet — hit <b>+ Add to channel</b> to pick titles, or bring in a whole genre, network or tag.</p>';
+                    renderMix();
+                    detailSub(d);
+                }
+
+                function saveSettings(body, msg) {
+                    return send('POST', 'channels/' + current + '/settings', body).then(function () { if (msg) { toast(msg); } }, function () { toast('Something went wrong'); });
+                }
+
+                $('#CfOrder').addEventListener('click', function (e) {
+                    var b = e.target.closest('button[data-val]');
+                    if (!b) { return; }
+                    inOrder = b.getAttribute('data-val') === 'inorder';
+                    setSeg('#CfOrder', inOrder ? 'inorder' : 'shuffle');
+                    $('#CfMix').classList.toggle('off', inOrder);
+                    renderItems();
+                    saveSettings({ Order: inOrder ? 'inorder' : 'shuffle' }, inOrder ? 'Playing in order' : 'Shuffling');
+                });
+                $('#CfMix').addEventListener('click', function (e) {
+                    var b = e.target.closest('button[data-val]');
+                    if (!b) { return; }
+                    weighted = b.getAttribute('data-val') === 'fav';
+                    setSeg('#CfMix', weighted ? 'fav' : 'even');
+                    renderItems();
+                    saveSettings({ Weighted: weighted }, weighted ? 'Weighted mix — drag or use ‹ › to rank' : 'Even mix — everything equal');
+                });
+                $('#QuasiDetailInARow').addEventListener('change', function () {
+                    saveSettings({ EpisodesInARow: parseInt(this.value, 10) || 1 }, this.value + ' in a row');
+                });
+                $('#QuasiDetailEnabled').addEventListener('change', function () {
+                    if (lastDetail) { lastDetail.enabled = this.checked; detailSub(lastDetail); }
+                    saveSettings({ Enabled: this.checked }, this.checked ? 'On the air — guide updates shortly' : 'Off the air');
+                });
+                function saveName() {
+                    var v = $('#QuasiDetailName').value.trim();
+                    if (!v || !lastDetail || v === lastDetail.name) { return; }
+                    lastDetail.name = v;
+                    saveSettings({ Name: v }, 'Renamed');
+                }
+                function saveNumber() {
+                    var v = parseInt($('#QuasiDetailNumber').value, 10);
+                    if (!v || !lastDetail || v === lastDetail.number) { return; }
+                    lastDetail.number = v;
+                    $('#QuasiDetailNumber').style.width = (String(v).length + 0.6) + 'ch';
+                    saveSettings({ Number: v }, 'Now on channel ' + v);
+                }
+                $('#QuasiDetailName').addEventListener('change', saveName);
+                $('#QuasiDetailNumber').addEventListener('change', saveNumber);
+                ['#QuasiDetailName', '#QuasiDetailNumber'].forEach(function (s) {
+                    $(s).addEventListener('keydown', function (e) { if (e.key === 'Enter') { this.blur(); } });
+                });
+
+                function saveRanking() {
+                    clearTimeout(rankTimer);
+                    var key = current, ids = ranking.slice();
+                    rankTimer = setTimeout(function () {
+                        send('POST', 'channels/' + key + '/ranking', { ItemIds: ids }).then(function () { toast('Mix saved — guide updates shortly'); });
+                    }, 900);
+                }
+                function moveTo(id, newIndex) {
+                    var i = ranking.indexOf(id);
+                    if (i < 0) { return; }
+                    ranking.splice(i, 1);
+                    newIndex = Math.max(0, Math.min(ranking.length, newIndex));
+                    ranking.splice(newIndex, 0, id);
+                    renderItems();
+                    saveRanking();
+                }
+
+                function closeMenus(except) { $$('.q-card.menu-open').forEach(function (c) { if (c !== except) { c.classList.remove('menu-open'); } }); }
+                document.addEventListener('click', function (e) {
+                    if (!document.body.contains(page)) { return; }
+                    if (!e.target.closest('#QuasiTvConfigPage .q-card')) { closeMenus(null); }
+                });
+
+                $('#QuasiItems').addEventListener('click', function (e) {
+                    var mv = e.target.closest('button[data-move]');
+                    if (mv) {
+                        var id = mv.closest('.q-card').getAttribute('data-id');
+                        moveTo(id, ranking.indexOf(id) + parseInt(mv.getAttribute('data-move'), 10));
+                        return;
+                    }
+                    var m = e.target.closest('button[data-menu]');
+                    if (m) {
+                        var c = m.closest('.q-card');
+                        closeMenus(c);
+                        c.classList.toggle('menu-open');
+                        return;
+                    }
+                    itemAction(e);
+                });
+
+                var dragId = null;
+                $('#QuasiItems').addEventListener('dragstart', function (e) {
+                    var c = e.target.closest('.q-card[draggable="true"]');
+                    if (!c) { return; }
+                    dragId = c.getAttribute('data-id');
+                    c.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', dragId);
+                });
+                $('#QuasiItems').addEventListener('dragover', function (e) {
+                    var c = e.target.closest('.q-card[draggable="true"]');
+                    if (!dragId || !c) { return; }
+                    e.preventDefault();
+                    $$('.q-card.drop-before').forEach(function (x) { x.classList.remove('drop-before'); });
+                    if (c.getAttribute('data-id') !== dragId) { c.classList.add('drop-before'); }
+                });
+                $('#QuasiItems').addEventListener('drop', function (e) {
+                    var c = e.target.closest('.q-card[draggable="true"]');
+                    if (!dragId || !c) { return; }
+                    e.preventDefault();
+                    var target = c.getAttribute('data-id');
+                    if (target !== dragId) {
+                        var to = ranking.indexOf(target);
+                        if (ranking.indexOf(dragId) < to) { to -= 1; }
+                        moveTo(dragId, to);
+                    }
+                });
+                $('#QuasiItems').addEventListener('dragend', function () {
+                    dragId = null;
+                    $$('.q-card.dragging, .q-card.drop-before').forEach(function (x) { x.classList.remove('dragging', 'drop-before'); });
+                });
+
+                function itemAction(e) {
+                    var btn = e.target.closest('button[data-act]');
+                    if (!btn || !current) { return false; }
+                    var id = btn.closest('.q-card').getAttribute('data-id');
+                    var act = btn.getAttribute('data-act');
+                    btn.disabled = true;
+                    send('POST', 'channels/' + current + '/' + act, { ItemId: id }).then(function () {
+                        toast(act === 'add' ? 'Added to this channel' : act === 'remove' ? 'Taken off this channel' : 'Put back');
+                        loadDetail(current, true);
+                    }, function () { btn.disabled = false; toast('Something went wrong'); });
+                    return true;
+                }
+                $('#QuasiItems').addEventListener('change', function (e) {
+                    var cred = e.target.closest('select.q-credits');
+                    if (cred && current) {
+                        var cid = cred.closest('.q-card').getAttribute('data-id');
+                        var keep = cred.value === 'keep';
+                        send('POST', 'credits', { ItemId: cid, Keep: keep }).then(function () {
+                            keepCredits[cid] = keep;
+                            toast(keep ? 'Credits will play in full' : 'Credits trimmed when marked');
+                        });
+                        return;
+                    }
+                    var sel = e.target.closest('select.q-block');
+                    if (!sel || !current) { return; }
+                    var id = sel.closest('.q-card').getAttribute('data-id');
+                    var n = parseInt(sel.value, 10) || 0;
+                    send('POST', 'channels/' + current + '/showblock', { ItemId: id, Count: n }).then(function () {
+                        showBlocks[id] = n;
+                        toast(n ? n + ' in a row for this show' : 'Using the channel default');
+                    });
+                });
+                $('#QuasiCollections').addEventListener('click', itemAction);
+                $('#QuasiRemoved').addEventListener('click', itemAction);
+
+                // ---------------- + Add to channel: one search for titles, genres, networks, tags ----------------
+                var findMode = 'titles';
+                var ruleLists = {}; // kind -> [{name, movies, shows}]
+                var FIND = {
+                    titles: { ph: 'Search movies, shows, episodes, collections…', hint: 'Add one title at a time. Collections bring in everything in them — even titles added later.' },
+                    genre: { ph: 'Search genres (Comedy, Horror, Animation…)', hint: 'Add a genre to bring in every title with it — new ones join on their own. Keep one out to block it here (titles you added by hand still stay).' },
+                    studio: { ph: 'Search networks & studios (NBC, A24, Pixar…)', hint: 'Bring in everything from a network or studio — new titles join on their own.' },
+                    tag: { ph: 'Search keyword tags (superhero, christmas, based on comic…)', hint: 'Keyword tags come from TMDB or ones you type into a title’s Tags in Jellyfin.' }
+                };
+
+                function openFinder() {
+                    $('#CfAddPanel').style.display = '';
+                    setFind(findMode);
+                    $('#QuasiSearch').focus();
+                }
+                function closeFinder() {
+                    $('#CfAddPanel').style.display = 'none';
+                    $('#QuasiSearch').value = '';
+                    $('#QuasiSearchResults').innerHTML = '';
+                    $('#CfRuleResults').innerHTML = '';
+                }
+                function setFind(mode) {
+                    findMode = mode;
+                    setSeg('#CfFind', mode);
+                    $('#QuasiSearch').placeholder = FIND[mode].ph;
+                    $('#CfFindHint').textContent = FIND[mode].hint;
+                    $('#QuasiGenreScope').style.display = mode === 'titles' ? 'none' : '';
+                    $('#QuasiSearchResults').innerHTML = '';
+                    $('#CfRuleResults').innerHTML = '';
+                    runFind();
+                }
+                $('#CfAddToggle').addEventListener('click', function () {
+                    if ($('#CfAddPanel').style.display === 'none') { openFinder(); } else { closeFinder(); }
+                });
+                $('#CfAddClose').addEventListener('click', closeFinder);
+                $('#CfFind').addEventListener('click', function (e) {
+                    var b = e.target.closest('button[data-val]');
+                    if (b) { $('#QuasiSearch').value = ''; setFind(b.getAttribute('data-val')); $('#QuasiSearch').focus(); }
+                });
+                $('#QuasiSearch').addEventListener('input', function () {
+                    clearTimeout(searchTimer);
+                    searchTimer = setTimeout(runFind, findMode === 'titles' ? 300 : 120);
+                });
+
+                function runFind() {
+                    var q = $('#QuasiSearch').value.trim();
+                    if (findMode === 'titles') { findTitles(q); } else { findRules(findMode, q); }
+                }
+
+                function findTitles(q) {
+                    $('#CfRuleResults').innerHTML = '';
+                    if (q.length < 2) { $('#QuasiSearchResults').innerHTML = ''; return; }
+                    var have = {};
+                    if (lastDetail) { lastDetail.items.concat(lastDetail.collections).forEach(function (it) { have[it.id] = true; }); }
+                    ApiClient.getItems(ApiClient.getCurrentUserId(), {
+                        SearchTerm: q, IncludeItemTypes: 'BoxSet,Movie,Series,Episode', Recursive: true, Limit: 24, Fields: 'ProductionYear'
+                    }).then(function (r) {
+                        if (findMode !== 'titles') { return; }
+                        $('#QuasiSearchResults').innerHTML = (r.Items || []).map(function (i) {
+                            var name = i.Type === 'Episode' ? (i.SeriesName + ' — ' + i.Name) : i.Name;
+                            var type = i.Type === 'Series' ? 'Show' : i.Type === 'BoxSet' ? 'Collection' : i.Type;
+                            return card({ id: i.Id, name: name, type: type, year: i.ProductionYear, onChannel: !!have[i.Id] }, 'search', '');
+                        }).join('') || '<p class="cf-hint">No matches.</p>';
+                    });
+                }
+                $('#QuasiSearchResults').addEventListener('click', function (e) {
+                    var b = e.target.closest('button[data-act]');
+                    if (!b) { return; }
+                    if (itemAction(e)) { b.textContent = 'On this channel'; b.removeAttribute('data-act'); }
+                });
+
+                function ruleState(kind, name) {
+                    var d = lastDetail;
+                    if (!d) { return ''; }
+                    var lc = name.toLowerCase();
+                    var inc = kind === 'tag' ? d.includeTags : kind === 'studio' ? d.includeStudios : d.includeGenres;
+                    var exc = kind === 'tag' ? d.excludeTags : kind === 'studio' ? d.excludeStudios : d.excludeGenres;
+                    if (inc.some(function (g) { return g.genre.toLowerCase() === lc; })) { return 'inc'; }
+                    if (exc.some(function (g) { return g.toLowerCase() === lc; })) { return 'exc'; }
+                    return '';
+                }
+
+                function findRules(kind, q) {
+                    $('#QuasiSearchResults').innerHTML = '';
+                    function draw() {
+                        if (findMode !== kind) { return; }
+                        var lq = q.toLowerCase();
+                        var list = (ruleLists[kind] || []).filter(function (g) { return !lq || g.name.toLowerCase().indexOf(lq) >= 0; });
+                        list.sort(function (a, b) {
+                            var as = lq && a.name.toLowerCase().indexOf(lq) === 0 ? 0 : 1, bs = lq && b.name.toLowerCase().indexOf(lq) === 0 ? 0 : 1;
+                            return as - bs || (b.movies + b.shows) - (a.movies + a.shows);
+                        });
+                        var shown = list.slice(0, 40);
+                        var html = shown.map(function (g) {
+                            var parts = [];
+                            if (g.shows) { parts.push(g.shows + (g.shows === 1 ? ' show' : ' shows')); }
+                            if (g.movies) { parts.push(g.movies + (g.movies === 1 ? ' movie' : ' movies')); }
+                            var st = ruleState(kind, g.name);
+                            var label = kind === 'tag' ? '#' + esc(g.name) : esc(g.name);
+                            var acts = st === 'inc'
+                                ? '<span class="cf-hint" style="margin:0;">Adding to this channel</span><button class="cf-btn" type="button" data-rule="clear">Undo</button>'
+                                : st === 'exc'
+                                    ? '<span class="cf-hint" style="margin:0;">Kept off this channel</span><button class="cf-btn" type="button" data-rule="clear">Undo</button>'
+                                    : '<button class="cf-btn primary" type="button" data-rule="include">+ Add all</button><button class="cf-btn danger" type="button" data-rule="exclude">Keep out</button>';
+                            return '<div class="cf-rrow ' + st + '" data-name="' + esc(g.name) + '"><div class="cf-main"><b>' + label + '</b><div class="cf-sub">' + parts.join(' · ') + '</div></div>' + acts + '</div>';
+                        }).join('');
+                        if (list.length > shown.length) { html += '<p class="cf-hint">' + (list.length - shown.length) + ' more — keep typing to narrow it down.</p>'; }
+                        $('#CfRuleResults').innerHTML = html || '<p class="cf-hint">Nothing in your library matches “' + esc(q) + '”.</p>';
+                    }
+                    if (ruleLists[kind]) { draw(); return; }
+                    $('#CfRuleResults').innerHTML = '<p class="cf-hint">Loading…</p>';
+                    getJson('genres?kind=' + kind).then(function (list) { ruleLists[kind] = list; draw(); });
+                }
+                $('#CfRuleResults').addEventListener('click', function (e) {
+                    var b = e.target.closest('button[data-rule]');
+                    if (!b) { return; }
+                    b.disabled = true;
+                    rule(b.getAttribute('data-rule'), b.closest('.cf-rrow').getAttribute('data-name'), findMode);
+                });
+
+                function rule(mode, name, kind) {
+                    name = (name || '').trim();
+                    if (!name || !current) { return; }
+                    send('POST', 'channels/' + current + '/genres', { Genre: name, Scope: $('#QuasiGenreScope').value, Mode: mode, Kind: kind }).then(function () {
+                        toast(mode === 'include' ? 'Adding everything ' + (kind === 'studio' ? 'from ' : kind === 'tag' ? 'tagged ' : 'in ') + name : mode === 'exclude' ? 'Keeping ' + name + ' off this channel' : 'Rule removed');
+                        loadDetail(current, true);
+                    }, function () { toast('Something went wrong'); });
+                }
+
+                $('#QuasiDetailDelete').addEventListener('click', function () {
+                    var btn = this;
+                    if (btn.getAttribute('data-confirm') !== '1') {
+                        btn.setAttribute('data-confirm', '1');
+                        btn.textContent = 'Click again to cancel it';
+                        setTimeout(function () { btn.removeAttribute('data-confirm'); btn.textContent = 'Cancel this channel'; }, 4000);
+                        return;
+                    }
+                    send('DELETE', 'channels/' + current).then(function () { toast('Channel cancelled'); loadList(); });
+                });
+
+                $('#QuasiDetailRebuild').addEventListener('click', function () {
+                    var btn = this;
+                    btn.disabled = true;
+                    send('POST', 'channels/' + current + '/rebuild').then(function () {
+                        btn.disabled = false;
+                        toast('Schedule rebuilt — wait for the green light up top, then reload your TV guide');
+                    }, function () { btn.disabled = false; toast('Something went wrong'); });
+                });
+
+                $('#QuasiBack').addEventListener('click', loadList);
+
+                // ---------------- guide status ----------------
+                var statusTimer = null, sawActivity = false;
+                function fmtTime(iso) { try { return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } }
+                function pill(cls, text) { $('#CfPill').className = 'cf-pill ' + cls; $('#CfPillText').textContent = text; }
+                function pollGuide() {
+                    clearTimeout(statusTimer);
+                    if (!document.body.contains(page)) { return; }
+                    getJson('guide-status').then(function (st) {
+                        var box = $('#QuasiGuideStatus'), msg = $('#QuasiGuideMsg'), meter = $('#QuasiGuideMeter'), now = $('#QuasiGuideNow');
+                        var busy = st.phase !== 'idle';
+                        box.className = 'q-status';
+                        now.style.display = 'none';
+                        meter.style.display = 'none';
+                        meter.classList.remove('indet');
+                        if (st.phase === 'running') {
+                            sawActivity = true;
+                            box.classList.add('running');
+                            var pct = st.progress == null ? null : Math.round(st.progress);
+                            pill('busy', 'Updating guide' + (pct == null ? '…' : ' ' + pct + '%'));
+                            msg.innerHTML = '<b>Updating the TV guide' + (pct == null ? '…' : '… ' + pct + '%') + '</b> &nbsp;Hold off reloading the guide on your TVs until this finishes.';
+                            meter.style.display = '';
+                            if (pct == null) { meter.classList.add('indet'); } else { meter.firstChild.style.width = pct + '%'; }
+                        } else if (st.phase === 'pending') {
+                            sawActivity = true;
+                            box.classList.add('running');
+                            pill('busy', 'Guide update starting…');
+                            msg.innerHTML = '<b>Guide update starting…</b>';
+                            meter.style.display = ''; meter.classList.add('indet');
+                        } else if (st.phase === 'waiting') {
+                            sawActivity = true;
+                            box.classList.add('waiting');
+                            pill('wait', 'Guide update queued');
+                            msg.innerHTML = '<b>Guide update queued.</b> It runs as soon as nobody is watching, so TVs don\'t jump.';
+                            now.style.display = '';
+                        } else if (st.lastStatus && st.lastStatus !== 'Completed' && st.lastStatus !== 'Cancelled') {
+                            box.classList.add('failed');
+                            pill('bad', 'Guide update failed');
+                            msg.innerHTML = '<b>Last guide update failed.</b> ' + esc(st.lastError || '');
+                            now.style.display = '';
+                        } else if (sawActivity && st.lastEndUtc) {
+                            box.classList.add('done');
+                            pill('ok', 'Guide up to date');
+                            msg.innerHTML = '<b>✓ Guide updated at ' + fmtTime(st.lastEndUtc) + '.</b> Safe to reload the guide on your TVs.';
+                        } else {
+                            pill('ok', 'Guide up to date');
+                            box.style.display = 'none';
+                            statusTimer = setTimeout(pollGuide, 15000);
+                            return;
+                        }
+                        box.style.display = '';
+                        statusTimer = setTimeout(pollGuide, busy ? 1500 : 15000);
+                    }, function () { statusTimer = setTimeout(pollGuide, 15000); });
+                }
+                function guideKick() { sawActivity = true; setTimeout(pollGuide, 300); }
+                $('#QuasiGuideNow').addEventListener('click', function () {
+                    send('POST', 'guide-refresh').then(guideKick);
+                });
+
+                // ---------------- settings ----------------
+                function showUrls(config) {
+                    var base = (config.InternalUrl || 'http://localhost:8096').replace(/\/+$/, '');
+                    $('#QuasiM3u').textContent = base + '/QuasiTV/channels.m3u?token=' + config.StreamToken;
+                    $('#QuasiXml').textContent = base + '/QuasiTV/guide.xml?token=' + config.StreamToken;
+                }
+
+                page.addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        $('#InternalUrl').value = config.InternalUrl;
+                        $('#VideoBitrateKbps').value = config.VideoBitrateKbps;
+                        $('#RevertWindowMinutes').value = config.RevertWindowMinutes;
+                        $('#MinGenreTitles').value = config.MinGenreTitles;
+                        $('#MinNetworkShows').value = config.MinNetworkShows;
+                        $('#ShowBanner').checked = config.ShowBanner;
+                        $('#BannerSeconds').value = config.BannerSeconds;
+                        $('#TimeZoneId').value = config.TimeZoneId;
+                        $('#PreferredAudioLanguages').value = config.PreferredAudioLanguages || 'eng,en';
+                        $('#TrimCredits').checked = config.TrimCredits;
+                        $('#CreditsKeepSecondsTv').value = config.CreditsKeepSecondsTv;
+                        $('#CreditsKeepSecondsMovie').value = config.CreditsKeepSecondsMovie;
+                        $('#ShowBumpers').checked = config.ShowBumpers;
+                        $('#BumperSeconds').value = config.BumperSeconds;
+                        $('#BumperVolumeDb').value = config.BumperVolumeDb;
+                        $('#DownArrowBanner').checked = config.DownArrowBanner;
+                        showUrls(config);
+                        Dashboard.hideLoadingMsg();
+                    });
+                    loadList();
+                    pollGuide();
+                });
+
+                $('#QuasiTvConfigForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.InternalUrl = $('#InternalUrl').value;
+                        config.VideoBitrateKbps = parseInt($('#VideoBitrateKbps').value, 10) || 4000;
+                        var rw = parseInt($('#RevertWindowMinutes').value, 10);
+                        config.RevertWindowMinutes = isNaN(rw) ? 10 : rw;
+                        config.MinGenreTitles = parseInt($('#MinGenreTitles').value, 10) || 15;
+                        config.MinNetworkShows = parseInt($('#MinNetworkShows').value, 10) || 4;
+                        config.ShowBanner = $('#ShowBanner').checked;
+                        config.BannerSeconds = parseInt($('#BannerSeconds').value, 10) || 5;
+                        config.TimeZoneId = $('#TimeZoneId').value.trim();
+                        config.PreferredAudioLanguages = $('#PreferredAudioLanguages').value || 'eng,en';
+                        config.TrimCredits = $('#TrimCredits').checked;
+                        var kt = parseInt($('#CreditsKeepSecondsTv').value, 10);
+                        config.CreditsKeepSecondsTv = isNaN(kt) ? 10 : kt;
+                        var km = parseInt($('#CreditsKeepSecondsMovie').value, 10);
+                        config.CreditsKeepSecondsMovie = isNaN(km) ? 60 : km;
+                        config.ShowBumpers = $('#ShowBumpers').checked;
+                        config.BumperSeconds = parseInt($('#BumperSeconds').value, 10) || 5;
+                        var bv = parseInt($('#BumperVolumeDb').value, 10);
+                        config.BumperVolumeDb = isNaN(bv) ? -14 : bv;
+                        config.DownArrowBanner = $('#DownArrowBanner').checked;
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                            showUrls(config);
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                            loadList();
+                        });
+                    });
+                    return false;
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>
