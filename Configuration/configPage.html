@@ -144,6 +144,13 @@
             #QuasiTvConfigPage .cf-rrow .cf-btn { padding:6px 12px; }
             #QuasiTvConfigPage .cf-rrow.inc { box-shadow:inset 3px 0 0 var(--cf-blue); }
             #QuasiTvConfigPage .cf-rrow.exc { box-shadow:inset 3px 0 0 #d0402e; }
+            /* get started */
+            #QuasiTvConfigPage .cf-start { display:flex; gap:18px; align-items:center; flex-wrap:wrap; padding:20px 22px; border-radius:14px; margin:0 0 18px;
+                background:linear-gradient(120deg, rgba(170,92,195,.22), rgba(0,164,220,.22)); border:1px solid rgba(0,164,220,.35); }
+            #QuasiTvConfigPage .cf-start h3 { margin:0 0 4px; }
+            #QuasiTvConfigPage .cf-start .cf-btn.primary { padding:12px 22px; font-size:1.05em; }
+            #QuasiTvConfigPage .cf-err { color:#ff9a8f; font-size:.9em; margin-top:6px; }
+            #QuasiTvConfigPage .cf-ok { color:#8fe0ae; font-weight:600; }
             /* settings */
             #QuasiTvConfigPage .cf-settings > summary { cursor:pointer; font-weight:600; padding:10px 0; }
             #QuasiTvConfigPage .cf-settings h3 { margin:1.4em 0 .4em; }
@@ -176,6 +183,14 @@
 
                 <!-- ============ CHANNEL LIST ============ -->
                 <div id="QuasiListView">
+                    <div id="CfStart" class="cf-start" style="display:none;">
+                        <div class="cf-main">
+                            <h3 id="CfStartTitle">Get started: put your package on the air</h3>
+                            <div class="cf-hint" id="CfStartText" style="margin:0;">One click adds Channel Free to Jellyfin’s Live TV (a tuner for the channels and a TV guide). Then open Live TV in any Jellyfin app.</div>
+                            <div class="cf-err" id="CfStartErr" style="display:none;"></div>
+                        </div>
+                        <button class="cf-btn primary" id="CfConnect" type="button">📺 Connect to Live TV</button>
+                    </div>
                     <div class="cf-bar">
                         <h2 style="margin:0;" class="cf-grow">Your package</h2>
                         <input id="QuasiNewName" class="cf-in" type="text" placeholder="New channel name" />
@@ -189,6 +204,8 @@
                     <details class="cf-settings cf-panel">
                         <summary>Setup &amp; settings</summary>
                         <h3>Hook it up to Live TV</h3>
+                        <p><span id="CfLiveState" class="cf-hint">Checking…</span> &nbsp;<button class="cf-btn" id="CfConnect2" type="button">Connect to Live TV</button></p>
+                        <p class="cf-hint">The button adds both of these for you. To do it by hand instead:</p>
                         <p>Dashboard → Live TV → <b>Tuner Devices</b> → + → M3U Tuner → paste:</p>
                         <pre id="QuasiM3u" class="cf-url"></pre>
                         <p>Dashboard → Live TV → <b>TV Guide Data Providers</b> → + → XMLTV → paste:</p>
@@ -448,6 +465,48 @@
                         loadList();
                     }, function () { btn.disabled = false; toast('Something went wrong'); });
                 });
+
+                // ---------------- Live TV hookup ----------------
+                function liveStatus() {
+                    getJson('livetv-status').then(function (st) {
+                        var linked = st.tuner && st.guide, current = st.tunerCurrent && st.guideCurrent;
+                        $('#CfStart').style.display = linked && current ? 'none' : '';
+                        if (linked && !current) {
+                            $('#CfStartTitle').textContent = 'Your Live TV links are out of date';
+                            $('#CfStartText').textContent = 'The tuner or guide in Jellyfin points at an old address. One click updates them.';
+                            $('#CfConnect').textContent = '↻ Fix Live TV links';
+                        }
+                        $('#CfLiveState').innerHTML = linked && current ? '<span class="cf-ok">✓ Connected to Live TV</span>'
+                            : linked ? 'Connected, but the links are out of date.'
+                            : st.tuner ? 'Tuner added — the TV guide isn’t yet.'
+                            : st.guide ? 'TV guide added — the tuner isn’t yet.'
+                            : 'Not connected yet.';
+                        $('#CfConnect2').style.display = linked && current ? 'none' : '';
+                    });
+                }
+                function connectLive() {
+                    var btns = [$('#CfConnect'), $('#CfConnect2')];
+                    btns.forEach(function (b) { b.disabled = true; });
+                    $('#CfStartErr').style.display = 'none';
+                    send('POST', 'connect-livetv').then(function (r) {
+                        btns.forEach(function (b) { b.disabled = false; });
+                        if (r && r.ok) {
+                            toast('Connected — building your TV guide now');
+                            liveStatus();
+                            guideKick();
+                        } else {
+                            var msg = (r && r.hint) || 'Something went wrong.';
+                            $('#CfStartErr').textContent = msg + (r && r.error ? ' (' + r.error + ')' : '');
+                            $('#CfStartErr').style.display = '';
+                            $('#CfStart').style.display = '';
+                        }
+                    }, function () {
+                        btns.forEach(function (b) { b.disabled = false; });
+                        toast('Something went wrong');
+                    });
+                }
+                $('#CfConnect').addEventListener('click', connectLive);
+                $('#CfConnect2').addEventListener('click', connectLive);
 
                 // ---------------- detail ----------------
                 var showBlocks = {}, keepCredits = {};
@@ -1027,6 +1086,7 @@
                         Dashboard.hideLoadingMsg();
                     });
                     loadList();
+                    liveStatus();
                     pollGuide();
                 });
 
@@ -1058,6 +1118,7 @@
                             showUrls(config);
                             Dashboard.processPluginConfigurationUpdateResult(result);
                             loadList();
+                            liveStatus();
                         });
                     });
                     return false;

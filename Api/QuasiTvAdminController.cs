@@ -2,7 +2,10 @@ using Jellyfin.Plugin.QuasiTV.Channels;
 using Jellyfin.Plugin.QuasiTV.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
+using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.LiveTv;
+using MediaBrowser.Model.LiveTv;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,10 +18,105 @@ namespace Jellyfin.Plugin.QuasiTV.Api;
 public class QuasiTvAdminController : ControllerBase
 {
     private readonly ILibraryManager _library;
+    private readonly ITunerHostManager _tuners;
+    private readonly IListingsManager _listings;
+    private readonly IConfigurationManager _serverConfig;
 
-    public QuasiTvAdminController(ILibraryManager library)
+    public QuasiTvAdminController(ILibraryManager library, ITunerHostManager tuners, IListingsManager listings, IConfigurationManager serverConfig)
     {
         _library = library;
+        _tuners = tuners;
+        _listings = listings;
+        _serverConfig = serverConfig;
+    }
+
+    private const string M3uPath = "/QuasiTV/channels.m3u";
+    private const string GuidePath = "/QuasiTV/guide.xml";
+
+    private static string BaseUrl => (string.IsNullOrWhiteSpace(Config.InternalUrl) ? "http://localhost:8096" : Config.InternalUrl).TrimEnd('/');
+
+    private static string M3uUrl => BaseUrl + M3uPath + "?token=" + Config.StreamToken;
+
+    private static string GuideUrl => BaseUrl + GuidePath + "?token=" + Config.StreamToken;
+
+    private LiveTvOptions LiveTv => _serverConfig.GetConfiguration<LiveTvOptions>("livetv");
+
+    private TunerHostInfo? OurTuner => LiveTv.TunerHosts.FirstOrDefault(t => (t.Url ?? string.Empty).Contains(M3uPath, StringComparison.OrdinalIgnoreCase));
+
+    private ListingsProviderInfo? OurGuide => LiveTv.ListingProviders.FirstOrDefault(p => (p.Path ?? string.Empty).Contains(GuidePath, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Is Channel Free hooked up to Jellyfin Live TV (M3U tuner + XMLTV guide)?</summary>
+    [HttpGet("livetv-status")]
+    public IActionResult LiveTvStatus()
+    {
+        var tuner = OurTuner;
+        var guide = OurGuide;
+        return Ok(new
+        {
+            tuner = tuner is not null,
+            guide = guide is not null,
+            tunerCurrent = tuner is not null && string.Equals(tuner.Url, M3uUrl, StringComparison.OrdinalIgnoreCase),
+            guideCurrent = guide is not null && string.Equals(guide.Path, GuideUrl, StringComparison.OrdinalIgnoreCase),
+            m3uUrl = M3uUrl,
+            guideUrl = GuideUrl
+        });
+    }
+
+    /// <summary>One click: add (or fix) the M3U tuner and the XMLTV guide provider in Jellyfin Live TV.</summary>
+    [HttpPost("connect-livetv")]
+    public async Task<IActionResult> ConnectLiveTv()
+    {
+        var step = "tuner";
+        try
+        {
+            var tuner = OurTuner;
+            if (tuner is null)
+            {
+                await _tuners.SaveTunerHost(new TunerHostInfo
+                {
+                    Type = "m3u",
+                    Url = M3uUrl,
+                    FriendlyName = "Channel Free",
+                    TunerCount = 0,
+                    ImportFavoritesOnly = false
+                }).ConfigureAwait(false);
+            }
+            else if (!string.Equals(tuner.Url, M3uUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                tuner.Url = M3uUrl;
+                await _tuners.SaveTunerHost(tuner).ConfigureAwait(false);
+            }
+
+            step = "guide";
+            var guide = OurGuide;
+            if (guide is null)
+            {
+                await _listings.SaveListingProvider(new ListingsProviderInfo
+                {
+                    Type = "xmltv",
+                    Path = GuideUrl,
+                    EnableAllTuners = true
+                }, false, false).ConfigureAwait(false);
+            }
+            else if (!string.Equals(guide.Path, GuideUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                guide.Path = GuideUrl;
+                await _listings.SaveListingProvider(guide, false, false).ConfigureAwait(false);
+            }
+        }
+        catch (Exception ex)
+        {
+            return Ok(new
+            {
+                ok = false,
+                step,
+                error = ex.Message,
+                hint = "Jellyfin couldn't open " + (step == "tuner" ? M3uUrl : GuideUrl) + " — check Internal Jellyfin URL in Setup & settings."
+            });
+        }
+
+        GuideRefresher.Request();
+        return Ok(new { ok = true });
     }
 
     private static PluginConfiguration Config => Plugin.Instance!.Configuration;
