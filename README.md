@@ -14,19 +14,29 @@
    - **Name:** `Channel Free`
    - **URL:** `https://raw.githubusercontent.com/scooperman912-prog/ChannelFree/main/manifest.json`
 2. Go to **Catalog**, find **Channel Free** under *Live TV*, and install it.
-3. Restart Jellyfin.
+3. Restart Jellyfin. In Docker, if the dashboard sits on "Restarting", run `docker restart jellyfin`.
 
 Requires **Jellyfin 10.11** or newer.
 
-## Set up (one time, about 2 minutes)
+## Set up (one click)
 
-Open **Dashboard → Plugins → Channel Free → Setup & settings**. It shows two personal links.
+1. Open **Dashboard → Plugins → Channel Free**.
+2. On the **Get started** card, click **📺 Connect to Live TV**. This adds Channel Free's tuner and TV guide to Jellyfin's Live TV for you.
+3. Wait for the green **Guide up to date** light at the top of the page, then open **Live TV** in any Jellyfin app.
 
+Your starter lineup is already picked: the 10 channels your library fills best, numbered 101+. Everything else is listed and ready to flip on. To have it pick again later, use **Setup & settings → ↻ Re-pick my lineup from the library**.
+
+<details>
+<summary>Connect failed, or you'd rather set it up by hand?</summary>
+
+Channel Free tells Jellyfin to read the channels from `http://localhost:8096`. If Jellyfin uses a different port, sits behind a reverse proxy or can't reach itself there, change **Internal Jellyfin URL** under **Setup & settings**, save, and click **Connect to Live TV** again.
+
+To set it up manually, **Setup & settings → Hook it up to Live TV** shows your two personal links:
 1. **Dashboard → Live TV → Tuner Devices → +** → *M3U Tuner* → paste the **M3U** link → Save.
 2. **Dashboard → Live TV → TV Guide Data Providers → +** → *XMLTV* → paste the **XMLTV** link → Save.
-3. Wait for the green **Guide up to date** light at the top of the Channel Free page, then open **Live TV** in any Jellyfin app.
 
-If Jellyfin can't reach itself at `http://localhost:8096` (custom port, reverse proxy, or a different network setup), change **Internal Jellyfin URL** in the settings first, then copy the links.
+If the links ever change, for example after you move servers or restore a backup, the page shows **Fix Live TV links** to update them in one click.
+</details>
 
 ## Using it
 
