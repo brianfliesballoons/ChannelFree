@@ -1,53 +1,73 @@
-# Push a tag like v0.9.3.0 (matching meta.json + the .csproj) and this builds the plugin,
-# creates the GitHub release with the zip, and adds it to manifest.json (the plugin repository).
-#   git tag v0.9.3.0 && git push origin v0.9.3.0
+# Releases happen on their own: bump the version in meta.json (and the .csproj) and push to main.
+# This builds the plugin, creates the GitHub release v<version> with the zip, and adds it to
+# manifest.json (the plugin repository Jellyfin reads). You can also run it by hand from the Actions tab.
 name: Release
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+    paths: ['meta.json']
+  workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Version
+        run: |
+          VERSION=$(python3 -c "import json;print(json.load(open('meta.json'))['version'])")
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null; then
+            echo "v$VERSION is already released — nothing to do."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+
+      - name: Check versions match
+        if: env.SKIP != '1'
+        run: python3 .github/scripts/check_version.py "$VERSION"
 
       - uses: actions/setup-dotnet@v4
+        if: env.SKIP != '1'
         with:
           dotnet-version: '9.0.x'
 
-      - name: Version from tag
-        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-
-      - name: Check versions match
-        run: python3 .github/scripts/check_version.py "$VERSION"
-
       - name: Build
+        if: env.SKIP != '1'
         run: dotnet build Jellyfin.Plugin.QuasiTV.csproj -c Release -o out
 
       - name: Package
+        if: env.SKIP != '1'
         run: |
           mkdir pkg
           cp out/Jellyfin.Plugin.QuasiTV.dll meta.json logo.png pkg/
           (cd pkg && zip -j "../channel-free_${VERSION}.zip" *)
 
       - name: Create the release with the zip
+        if: env.SKIP != '1'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python3 -c "import json;m=json.load(open('meta.json'));print(m['changelog']+'\n\n**Install:** Jellyfin → Dashboard → Plugins → Repositories → add https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/manifest.json, then install Channel Free from the Catalog. Requires Jellyfin '+m['targetAbi'].rsplit('.',2)[0]+'+.')" > notes.md
-          gh release create "$GITHUB_REF_NAME" "channel-free_${VERSION}.zip" --title "Channel Free ${VERSION}" --notes-file notes.md
+          python3 .github/scripts/release_notes.py > notes.md
+          gh release create "v${VERSION}" "channel-free_${VERSION}.zip" --target "$GITHUB_SHA" --title "Channel Free ${VERSION}" --notes-file notes.md
 
-      - name: Add version to manifest.json on main
+      - name: Add version to manifest.json
+        if: env.SKIP != '1'
         run: |
           git fetch origin main
           git checkout -B main origin/main
           python3 .github/scripts/update_manifest.py "$VERSION" "channel-free_${VERSION}.zip" \
-            "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/channel-free_${VERSION}.zip" \
+            "https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/channel-free_${VERSION}.zip" \
             pkg/meta.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
