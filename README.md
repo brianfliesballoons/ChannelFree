@@ -77,7 +77,7 @@ cd ChannelFree
 JELLYFIN_PLUGINS=/path/to/jellyfin/config/plugins JELLYFIN_CONTAINER=jellyfin bash scripts/build-and-install.sh
 ```
 
-The script builds inside the official .NET 9 SDK Docker image, so you don't need .NET installed. Releases are built by GitHub Actions: publishing a release tagged `v<version>` (matching `meta.json`) builds the zip and adds it to `manifest.json`.
+The script builds inside the official .NET 9 SDK Docker image, so you don't need .NET installed. Releases are built by GitHub Actions: pushing a tag `v<version>` (matching `meta.json` and the `.csproj`) builds the zip, creates the GitHub release and adds it to `manifest.json`.
 
 ## License
 

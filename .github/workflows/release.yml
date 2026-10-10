@@ -1,10 +1,11 @@
-# Publish a GitHub release tagged like v0.9.3.0 and this builds the plugin,
-# attaches the zip to the release and adds it to manifest.json (the plugin repository).
+# Push a tag like v0.9.3.0 (matching meta.json + the .csproj) and this builds the plugin,
+# creates the GitHub release with the zip, and adds it to manifest.json (the plugin repository).
+#   git tag v0.9.3.0 && git push origin v0.9.3.0
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags: ['v*']
 
 permissions:
   contents: write
@@ -34,10 +35,12 @@ jobs:
           cp out/Jellyfin.Plugin.QuasiTV.dll meta.json logo.png pkg/
           (cd pkg && zip -j "../channel-free_${VERSION}.zip" *)
 
-      - name: Attach zip to the release
+      - name: Create the release with the zip
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" "channel-free_${VERSION}.zip" --clobber
+        run: |
+          python3 -c "import json;m=json.load(open('meta.json'));print(m['changelog']+'\n\n**Install:** Jellyfin → Dashboard → Plugins → Repositories → add https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/manifest.json, then install Channel Free from the Catalog. Requires Jellyfin '+m['targetAbi'].rsplit('.',2)[0]+'+.')" > notes.md
+          gh release create "$GITHUB_REF_NAME" "channel-free_${VERSION}.zip" --title "Channel Free ${VERSION}" --notes-file notes.md
 
       - name: Add version to manifest.json on main
         run: |
