@@ -16,7 +16,11 @@
 2. Go to **Catalog**, find **Channel Free** under *Live TV*, and install it.
 3. Restart Jellyfin. In Docker, if the dashboard sits on "Restarting", run `docker restart jellyfin`.
 
-Requires **Jellyfin 10.11** or newer.
+### Requirements
+
+- **Jellyfin 10.11** or newer. No other plugins are needed.
+- *Optional:* [Intro Skipper](https://github.com/intro-skipper/intro-skipper) lets Channel Free cut end credits short using the credit markers it detects. Without it, credits are only trimmed when a file has a chapter named "Credits".
+- *Optional:* a GPU with VA-API (Intel/AMD) for hardware encoding. Without one, Channel Free encodes on the CPU.
 
 ## Set up (one click)
 
