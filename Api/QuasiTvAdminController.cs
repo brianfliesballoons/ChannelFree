@@ -219,6 +219,7 @@ public class QuasiTvAdminController : ControllerBase
         var movies = idx.Movies.SelectMany(m => field(m) ?? Array.Empty<string>()).GroupBy(g => g, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
         var shows = idx.Series.SelectMany(x => field(x) ?? Array.Empty<string>()).GroupBy(g => g, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
         var list = movies.Keys.Union(shows.Keys, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Any(char.IsLetterOrDigit))
             .Where(g => !g.StartsWith("quasi:", StringComparison.OrdinalIgnoreCase) && !g.StartsWith("cable:", StringComparison.OrdinalIgnoreCase))
             .Select(g => new { name = g, movies = movies.GetValueOrDefault(g), shows = shows.GetValueOrDefault(g) })
             .Where(g => !tags || g.movies + g.shows >= 2) // keywords: skip one-offs

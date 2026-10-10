@@ -73,6 +73,8 @@ public static class ChannelRules
         // Genre movie channels (alphabetical so numbers stay put as the library grows).
         var genres = idx.Movies
             .SelectMany(m => m.Genres ?? Array.Empty<string>())
+            .Where(UsableName)
+            .Select(g => g.Trim())
             .GroupBy(g => g, StringComparer.OrdinalIgnoreCase)
             .Where(g => g.Count() >= Math.Max(1, cfg.MinGenreTitles))
             .Select(g => g.Key)
@@ -87,6 +89,8 @@ public static class ChannelRules
         // Network channels.
         var networks = idx.Series
             .SelectMany(s => s.Studios ?? Array.Empty<string>())
+            .Where(UsableName)
+            .Select(n => n.Trim())
             .GroupBy(n => n, StringComparer.OrdinalIgnoreCase)
             .Where(g => g.Count() >= Math.Max(1, cfg.MinNetworkShows))
             .Select(g => g.Key)
@@ -400,7 +404,21 @@ public static class ChannelRules
         return result;
     }
 
-    public static string Slug(string s) => Regex.Replace(s.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+    public static string Slug(string s)
+    {
+        var slug = Regex.Replace(s.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
+        if (slug.Length > 0)
+        {
+            return slug;
+        }
+
+        // Names with no a-z/0-9 (e.g. non-Latin studio names) still need a unique, stable key.
+        var hash = System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(s.Trim().ToLowerInvariant()));
+        return "u" + Convert.ToHexString(hash, 0, 5).ToLowerInvariant();
+    }
+
+    /// <summary>Real names only — metadata sometimes carries blank or punctuation-only genres/studios.</summary>
+    private static bool UsableName(string? s) => !string.IsNullOrWhiteSpace(s) && s.Any(char.IsLetterOrDigit);
 
     private static bool Excluded(Unit u, LibraryIndex idx)
     {
@@ -430,7 +448,7 @@ public static class ChannelRules
     private static bool Acclaimed(BaseItem i) => (i.CommunityRating ?? 0) >= 7.5f && (i.CriticRating ?? 0) >= 90f;
 
     private static bool Has(string[]? values, string v)
-        => values is not null && values.Any(x => string.Equals(x, v, StringComparison.OrdinalIgnoreCase));
+        => values is not null && values.Any(x => string.Equals(x?.Trim(), v.Trim(), StringComparison.OrdinalIgnoreCase));
 
     private static bool HasAny(string[]? values, params string[] vs) => vs.Any(v => Has(values, v));
 
